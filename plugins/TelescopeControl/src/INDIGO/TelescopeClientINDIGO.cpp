@@ -1,0 +1,202 @@
+/*
+ * Copyright (C) 2017 Alessandro Siniscalchi <asiniscalchi@gmail.com>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA  02110-1335, USA.
+ */
+
+#include "TelescopeClientINDIGO.hpp"
+
+#include <QDebug>
+#include <QRegularExpression>
+#include <cmath>
+#include <limits>
+
+#include "StelCore.hpp"
+#include "StelUtils.hpp"
+#include "libindi/inditelescope.h"
+#include "INDIGOControlWidget.hpp"
+
+TelescopeClientINDIGO::TelescopeClientINDIGO(const QString &name, const QString &params):
+	TelescopeClient(name)
+{
+	qDebug() << "TelescopeClientINDI::TelescopeClientINDI";
+
+	static const QRegularExpression paramRx("^([^:]*):(\\d+):([^:]*)$");
+	QRegularExpressionMatch paramMatch=paramRx.match(params);
+	QString host;
+	int port = 0;
+	if (paramMatch.hasMatch())
+	{
+		host = paramMatch.captured(1).trimmed();
+		port = paramMatch.captured(2).toInt();
+		mDevice = paramMatch.captured(3).trimmed();
+	}
+
+	mConnection.setServer(host.toStdString().c_str(), static_cast<unsigned int>(port));
+	mConnection.watchDevice(mDevice.toStdString().c_str());
+	mConnection.connectServer();
+}
+
+TelescopeClientINDIGO::~TelescopeClientINDIGO()
+{
+	mConnection.disconnectServer();
+}
+
+Vec3d TelescopeClientINDIGO::getJ2000EquatorialPos(const StelCore*) const
+{
+	INDIGOConnection::Coordinates positionJNow = mConnection.position();
+
+	double longitudeRad = positionJNow.RA * M_PI / 12.0;
+	double latitudeRad = positionJNow.DEC * M_PI / 180.0;
+
+	Vec3d posJNow;
+	StelUtils::spheToRect(longitudeRad, latitudeRad, posJNow);
+	const StelCore* core = StelApp::getInstance().getCore();
+	Vec3d posJ2000 = core->equinoxEquToJ2000(posJNow, StelCore::RefractionOff);
+	return posJ2000;
+}
+
+void TelescopeClientINDIGO::telescopeGoto(const Vec3d &positionJ2000, StelObjectP selectObject)
+{
+	Q_UNUSED(selectObject)
+	const StelCore* core = StelApp::getInstance().getCore();
+	Vec3d posRectJNow = core->j2000ToEquinoxEqu(positionJ2000, StelCore::RefractionOff);
+	Vec3d posJ2000;
+	StelUtils::rectToSphe(&posJ2000[0], &posJ2000[1], posRectJNow);
+
+	if (posJ2000[0] < 0.0)
+		posJ2000[0] += 2*M_PI;
+
+	double longitudeRad = posJ2000[0] * 12.0 / M_PI;
+	double latitudeRad = posJ2000[1] * 180.0 / M_PI;
+
+
+	INDIGOConnection::Coordinates positionJNow = mConnection.position();
+	positionJNow.RA = longitudeRad;
+	positionJNow.DEC = latitudeRad;
+
+	// unpark telescope before slewing!
+	// TODO: Add commands and buttons for park/unpark telescope for all telescopes
+	mConnection.unParkTelescope();
+	mConnection.setPosition(positionJNow);
+}
+
+void TelescopeClientINDIGO::telescopeSync(const Vec3d &positionJ2000, StelObjectP selectObject)
+{
+	Q_UNUSED(selectObject)
+	const StelCore* core = StelApp::getInstance().getCore();
+	Vec3d posRectJNow = core->j2000ToEquinoxEqu(positionJ2000, StelCore::RefractionOff);
+	Vec3d posJ2000;
+	StelUtils::rectToSphe(&posJ2000[0], &posJ2000[1], posRectJNow);
+
+	if (posJ2000[0] < 0.0)
+		posJ2000[0] += 2*M_PI;
+
+	double longitudeRad = posJ2000[0] * 12.0 / M_PI;
+	double latitudeRad = posJ2000[1] * 180.0 / M_PI;
+
+
+	INDIGOConnection::Coordinates positionJNow = mConnection.position();
+	positionJNow.RA = longitudeRad;
+	positionJNow.DEC = latitudeRad;
+
+	// unpark telescope before slewing!
+	// TODO: Add commands and buttons for park/unpark telescope for all telescopes
+	mConnection.unParkTelescope();
+	mConnection.syncPosition(positionJNow);
+}
+
+bool TelescopeClientINDIGO::isConnected() const
+{
+	return mConnection.isDeviceConnected();
+}
+
+bool TelescopeClientINDIGO::hasKnownPosition() const
+{
+	return mConnection.isDeviceConnected();
+}
+
+int TelescopeClientINDIGO::toINDISpeed(double speed) const
+{
+	speed = std::abs(speed);
+
+	if (speed < std::numeric_limits<double>::epsilon())
+		return INDIGOConnection::SLEW_STOP;
+	else if (speed <= 0.25)
+		return INDI::Telescope::SLEW_GUIDE;
+	else if (speed <= 0.5)
+		return INDI::Telescope::SLEW_CENTERING;
+	else if (speed <= 0.75)
+		return INDI::Telescope::SLEW_FIND;
+	else
+		return INDI::Telescope::SLEW_MAX;
+}
+
+void TelescopeClientINDIGO::move(double angle, double speed)
+{
+	if (angle < 0.0 || angle >= 360.0)
+	{
+		qWarning() << "TelescopeClientINDI::move angle " << angle << " out of range [0,360)";
+		return;
+	}
+
+	if (speed < 0.0 || speed > 1.0)
+	{
+		qWarning() << "TelescopeClientINDI::move speed " << speed << "out of range [0,1]";
+		return;
+	}
+
+	double rad = angle * M_PI / 180.0;
+	double vEst = speed * std::sin(rad);
+	double vNorth = speed * std::cos(rad);
+
+	int indiSpeedE = toINDISpeed(vEst);
+	int indiSpeedN = toINDISpeed(vNorth);
+
+	if (angle < 90)
+	{
+		mConnection.moveNorth(indiSpeedN);
+		mConnection.moveEast(indiSpeedE);
+		mConnection.moveSouth(INDIGOConnection::SLEW_STOP);
+		mConnection.moveWest(INDIGOConnection::SLEW_STOP);
+	}
+	else if (angle < 180)
+	{
+		mConnection.moveNorth(INDIGOConnection::SLEW_STOP);
+		mConnection.moveEast(indiSpeedE);
+		mConnection.moveSouth(indiSpeedN);
+		mConnection.moveWest(INDIGOConnection::SLEW_STOP);
+	}
+	else if (angle < 270)
+	{
+		mConnection.moveNorth(INDIGOConnection::SLEW_STOP);
+		mConnection.moveEast(INDIGOConnection::SLEW_STOP);
+		mConnection.moveSouth(indiSpeedN);
+		mConnection.moveWest(indiSpeedE);
+	}
+	else
+	{
+		mConnection.moveNorth(indiSpeedN);
+		mConnection.moveEast(INDIGOConnection::SLEW_STOP);
+		mConnection.moveSouth(INDIGOConnection::SLEW_STOP);
+		mConnection.moveWest(indiSpeedE);
+	}
+}
+
+
+QWidget *TelescopeClientINDIGO::createControlWidget(QSharedPointer<TelescopeClient> telescope, QWidget *parent) const
+{
+	return new INDIGOControlWidget(telescope, parent);
+}

@@ -108,6 +108,7 @@ TelescopeControl::TelescopeControl()
 	connectionTypeNames.insert(ConnectionRemote, "remote");
 	connectionTypeNames.insert(ConnectionRTS2, "RTS2");
 	connectionTypeNames.insert(ConnectionINDI, "INDI");
+	connectionTypeNames.insert(ConnectionINDIGO, "INDIGO");
 	connectionTypeNames.insert(ConnectionASCOM, "ASCOM");
 }
 
@@ -890,6 +891,13 @@ void TelescopeControl::loadTelescopes()
 			deviceModelName = telescope.value("device_model").toString();
 		}
 
+		if (connectionType == ConnectionINDIGO)
+                {
+                        portTCP = telescope.value("tcp_port").toInt();
+                        hostName = telescope.value("host_name").toString();
+                        deviceModelName = telescope.value("device_model").toString();
+                }
+
 		if (connectionType == ConnectionASCOM)
 		{
 			ascomDeviceId = telescope.value("ascom_device_id").toString();
@@ -1046,6 +1054,13 @@ bool TelescopeControl::addTelescopeAtSlot(int slot, ConnectionType connectionTyp
 		telescope.insert("device_model", deviceModelName);
 	}
 
+	if (connectionType == ConnectionINDIGO)
+        {
+                telescope.insert("host_name", host);
+                telescope.insert("tcp_port", portTCP);
+                telescope.insert("device_model", deviceModelName);
+        }
+
 	if (connectionType == ConnectionASCOM)
 	{
 		telescope.insert("ascom_device_id", ascomDeviceId);
@@ -1161,6 +1176,10 @@ bool TelescopeControl::getTelescopeAtSlot(int slot, ConnectionType& connectionTy
 	{
 		deviceModelName = telescope.value("device_model").toString();
 	}
+	if(connectionType == ConnectionINDIGO)
+        {
+                deviceModelName = telescope.value("device_model").toString();
+        }
 	if(connectionType == ConnectionASCOM)
 	{
 		ascomDeviceId = telescope.value("ascom_device_id").toString();
@@ -1413,6 +1432,10 @@ bool TelescopeControl::startClientAtSlot(int slotNumber, ConnectionType connecti
 	case ConnectionINDI:
 		initString = QString("%1:%2:%3:%4:%5:%6").arg(name, "INDI", "J2000", host, QString::number(portTCP), deviceModelName);
 		break;
+
+	case ConnectionINDIGO:
+                initString = QString("%1:%2:%3:%4:%5:%6").arg(name, "INDI", "J2000", host, QString::number(portTCP), deviceModelName);
+                break;
 
 	case ConnectionASCOM:
 		initString = QString("%1:%2:%3:%4:%5").arg(name, "ASCOM", equinox, ascomDeviceId, ascomUseDeviceEqCoordType ? "true" : "false");

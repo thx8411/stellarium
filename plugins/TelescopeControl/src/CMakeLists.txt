@@ -6,6 +6,7 @@ add_subdirectory(Lx200)
 add_subdirectory(NexStar)
 add_subdirectory(Rts2)
 add_subdirectory(INDI)
+add_subdirectory(INDIGO)
 if(WIN32)
     add_subdirectory(ASCOM)
 endif(WIN32)
@@ -41,6 +42,7 @@ TARGET_LINK_LIBRARIES(TelescopeControl-static
     TelescopeControl_gui
     TelescopeControl_Lx200
     TelescopeControl_INDI
+    TelescopeControl_INDIGO
     TelescopeControl_NexStar
     TelescopeControl_Rts2
     TelescopeControl_common

@@ -97,6 +97,7 @@ public:
 		ConnectionRemote,
 		ConnectionRTS2,
 		ConnectionINDI,
+		ConnectionINDIGO,
 		ConnectionASCOM,
 		ConnectionTypeCount
 	};

@@ -154,6 +154,7 @@ void TelescopeConfigurationDialog::createDialogContent()
 	connect(ui->radioButtonTelescopeVirtual, SIGNAL(toggled(bool)), this, SLOT(toggleTypeVirtual(bool)));
 	connect(ui->radioButtonTelescopeRTS2, SIGNAL(toggled(bool)), this, SLOT(toggleTypeRTS2(bool)));
 	connect(ui->radioButtonTelescopeINDI, SIGNAL(toggled(bool)), this, SLOT(toggleTypeINDI(bool)));
+	connect(ui->radioButtonTelescopeINDIGO, SIGNAL(toggled(bool)), this, SLOT(toggleTypeINDIGO(bool)));
 	#ifdef Q_OS_WIN
 	connect(ui->radioButtonTelescopeASCOM, SIGNAL(toggled(bool)), this, SLOT(toggleTypeASCOM(bool)));
 	#else
@@ -193,6 +194,7 @@ void TelescopeConfigurationDialog::initConfigurationDialog()
 	ui->groupBoxDeviceSettings->hide();
 	ui->groupBoxRTS2Settings->hide();
 	ui->INDIProperties->hide();
+	ui->INDIGOProperties->hide();
 	#ifdef Q_OS_WIN
 	ascomWidget->hide();
 	#endif
@@ -347,6 +349,13 @@ void TelescopeConfigurationDialog::initExistingTelescopeConfiguration(int slot)
 		ui->INDIProperties->setPort(portTCP);
 		ui->INDIProperties->setSelectedDevice(deviceModelName);
 	}
+	else if (connectionType == TelescopeControl::ConnectionINDIGO)
+        {
+                ui->radioButtonTelescopeINDIGO->setChecked(true);
+                ui->INDIGOProperties->setHost(host);
+                ui->INDIGOProperties->setPort(portTCP);
+                ui->INDIGOProperties->setSelectedDevice(deviceModelName);
+        }
 	#ifdef Q_OS_WIN
 	else if (connectionType == TelescopeControl::ConnectionASCOM)
 	{
@@ -456,10 +465,16 @@ void TelescopeConfigurationDialog::toggleTypeINDI(bool enabled)
 	ui->INDIProperties->setVisible(enabled);
 }
 
+void TelescopeConfigurationDialog::toggleTypeINDIGO(bool enabled)
+{
+        ui->INDIGOProperties->setVisible(enabled);
+}
+
+
 #ifdef Q_OS_WIN
 void TelescopeConfigurationDialog::toggleTypeASCOM(bool enabled)
 {
-	ascomWidget->setVisible(enabled);	
+	ascomWidget->setVisible(enabled);
 }
 #endif
 
@@ -545,6 +560,12 @@ void TelescopeConfigurationDialog::buttonSavePressed()
 		telescopeManager->addTelescopeAtSlot(configuredSlot, type, name, equinox, ui->INDIProperties->host(),
 		  ui->INDIProperties->port(), delay, connectAtStartup, circles, ui->INDIProperties->selectedDevice());
 	}
+	else if (ui->radioButtonTelescopeINDIGO->isChecked())
+        {
+                type = TelescopeControl::ConnectionINDIGO;
+                telescopeManager->addTelescopeAtSlot(configuredSlot, type, name, equinox, ui->INDIGOProperties->host(),
+                  ui->INDIGOProperties->port(), delay, connectAtStartup, circles, ui->INDIGOProperties->selectedDevice());
+        }
 	#ifdef Q_OS_WIN
 	else if (ui->radioButtonTelescopeASCOM->isChecked())
 	{

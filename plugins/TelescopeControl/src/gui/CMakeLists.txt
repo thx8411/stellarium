@@ -31,7 +31,8 @@ target_link_libraries(TelescopeControl_gui
     Qt${QT_VERSION_MAJOR}::Network
     Qt${QT_VERSION_MAJOR}::Gui
     TelescopeControl_common
-    TelescopeControl_INDI    
+    TelescopeControl_INDI
+    TelescopeControl_INDIGO
     )
 
 IF(WIN32)

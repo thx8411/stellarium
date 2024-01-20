@@ -1,9 +1,9 @@
 /*
  * Stellarium Telescope Control Plug-in
- * 
+ *
  * Copyright (C) 2006 Johannes Gajdosik
  * Copyright (C) 2009 Bogdan Marinov
- * 
+ *
  * This module was originally written by Johannes Gajdosik in 2006
  * as a core module of Stellarium. In 2009 it was significantly extended with
  * GUI features and later split as an external plug-in module by Bogdan Marinov.
@@ -29,6 +29,7 @@
 #include "Lx200/TelescopeClientDirectLx200.hpp"
 #include "NexStar/TelescopeClientDirectNexStar.hpp"
 #include "INDI/TelescopeClientINDI.hpp"
+#include "INDIGO/TelescopeClientINDIGO.hpp"
 #include "StelTranslator.hpp"
 #include "StelCore.hpp"
 
@@ -76,7 +77,7 @@ TelescopeClient *TelescopeClient::create(const QString &url)
 	qDebug() << "Creating telescope" << url << "; name/type/equinox/params:" << name << type << ((eq == TelescopeControl::EquinoxJNow) ? "JNow" : "J2000") << params;
 
 	TelescopeClient * newTelescope = nullptr;
-	
+
 	if (type == "TelescopeServerDummy")
 	{
 		newTelescope = new TelescopeClientDummy(name, params);
@@ -101,6 +102,10 @@ TelescopeClient *TelescopeClient::create(const QString &url)
 	{
 		newTelescope = new TelescopeClientINDI(name, params);
 	}
+	else if (type == "INDIGO")
+        {
+                newTelescope = new TelescopeClientINDIGO(name, params);
+        }
 	#ifdef Q_OS_WIN
 	else if (type == "ASCOM")
 	{
@@ -111,7 +116,7 @@ TelescopeClient *TelescopeClient::create(const QString &url)
 	{
 		qWarning() << "WARNING - unknown telescope type" << type << "- not creating a telescope object for url" << url;
 	}
-	
+
 	if (newTelescope && !newTelescope->isInitialized())
 	{
 		qDebug() << "TelescopeClient::create(): Unable to create a telescope client.";

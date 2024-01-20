@@ -1,0 +1,19 @@
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+set(CMAKE_AUTOMOC ON)
+
+FIND_PACKAGE(Qt${QT_VERSION_MAJOR} COMPONENTS Test REQUIRED)
+
+add_executable(testTelescopeControl_INDIGO testTelescopeControl_INDIGO.cpp testTelescopeControl_INDIGO.hpp)
+target_link_libraries(testTelescopeControl_INDIGO Qt${QT_VERSION_MAJOR}::Test TelescopeControl_INDIGO stelMain)
+add_test(testTelescopeControl_INDIGO testTelescopeControl_INDIGO)
+SET_TARGET_PROPERTIES(testTelescopeControl_INDIGO PROPERTIES FOLDER "plugins/TelescopeControl/test")
+
+add_executable(testINDIGOConnection testINDIGOConnection.cpp testINDIGOConnection.hpp)
+target_link_libraries(testINDIGOConnection Qt${QT_VERSION_MAJOR}::Test TelescopeControl_INDIGO stelMain)
+add_test(testINDIGOConnection testINDIGOConnection)
+SET_TARGET_PROPERTIES(testINDIGOConnection PROPERTIES FOLDER "plugins/TelescopeControl/test")
+
+add_executable(testTelescopeClientINDIGO testTelescopeClientINDIGO.cpp testTelescopeClientINDIGO.hpp)
+target_link_libraries(testTelescopeClientINDIGO Qt${QT_VERSION_MAJOR}::Test TelescopeControl_INDIGO stelMain)
+add_test(testTelescopeClientINDIGO testTelescopeClientINDIGO)
+SET_TARGET_PROPERTIES(testTelescopeClientINDIGO PROPERTIES FOLDER "plugins/TelescopeControl/test")

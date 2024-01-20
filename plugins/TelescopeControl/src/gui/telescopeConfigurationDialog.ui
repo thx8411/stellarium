@@ -152,6 +152,13 @@
        </widget>
       </item>
       <item>
+       <widget class="QRadioButton" name="radioButtonTelescopeINDIGO">
+        <property name="text">
+         <string notr="true">INDIGO native</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QRadioButton" name="radioButtonTelescopeASCOM">
         <property name="text">
          <string notr="true">ASCOM</string>
@@ -386,6 +393,9 @@
        </item>
        <item>
         <widget class="TelescopeClientINDIWidget" name="INDIProperties" native="true"/>
+       </item>
+       <item>
+        <widget class="TelescopeClientINDIGOWidget" name="INDIGOProperties" native="true"/>
        </item>
        <item>
         <layout class="QVBoxLayout" name="ASCOMLayout">
@@ -877,6 +887,12 @@
    <class>TelescopeClientINDIWidget</class>
    <extends>QWidget</extends>
    <header>TelescopeClientINDIWidget.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>TelescopeClientINDIGOWidget</class>
+   <extends>QWidget</extends>
+   <header>TelescopeClientINDIGOWidget.hpp</header>
    <container>1</container>
   </customwidget>
   <customwidget>

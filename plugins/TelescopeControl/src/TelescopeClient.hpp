@@ -1,9 +1,9 @@
 /*
  * Stellarium Telescope Control Plug-in
- * 
+ *
  * Copyright (C) 2006 Johannes Gajdosik
  * Copyright (C) 2009 Bogdan Marinov
- * 
+ *
  * This module was originally written by Johannes Gajdosik in 2006
  * as a core module of Stellarium. In 2009 it was significantly extended with
  * GUI features and later split as an external plug-in module by Bogdan Marinov.
@@ -12,12 +12,12 @@
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA  02110-1335, USA.
@@ -60,7 +60,7 @@ public:
 	//! The params part is optional.  We use QRegularExpression to validate the url and extract the components.
 	static TelescopeClient *create(const QString &url);
 	~TelescopeClient(void) override {}
-	
+
 	// Methods inherited from StelObject
 	QString getEnglishName(void) const override {return name;}
 	QString getNameI18n(void) const override {return nameI18n;}
@@ -81,7 +81,7 @@ public:
 	QString getObjectType(void) const override {return N_("telescope");}
 	QString getObjectTypeI18n(void) const override {return q_(getObjectType());}
 	QString getID() const override {return name;}
-		
+
 	// Methods specific to telescope
 	virtual void telescopeGoto(const Vec3d &j2000Pos, StelObjectP selectObject) = 0;
 	virtual void telescopeSync(const Vec3d &j2000Pos, StelObjectP selectObject) = 0;
@@ -99,7 +99,7 @@ public:
 	void addOcular(double fov) {if (fov>=0.0) ocularFovs.push_back(fov);}
 	//! Retrieve list of fields of view for this telescope
 	const QList<double> &getOculars(void) const {return ocularFovs;}
-	
+
 	virtual bool prepareCommunication() {return false;}
 	virtual void performCommunication() {}
 
@@ -205,7 +205,7 @@ public:
 		//return (tcpSocket->isValid() && !wait_for_connection_establishment);
 		return (tcpSocket->state() == QAbstractSocket::ConnectedState);
 	}
-	
+
 private:
 	Vec3d getJ2000EquatorialPos(const StelCore* core=nullptr) const override;
 	bool prepareCommunication() override;
@@ -218,7 +218,7 @@ private:
 	}
 	void performReading(void);
 	void performWriting(void);
-	
+
 private:
 	void hangup(void);
 	QHostAddress address;
@@ -239,7 +239,7 @@ private:
 	}
 
 	TelescopeControl::Equinox equinox;
-	
+
 private slots:
 	void socketConnected(void);
 	void socketFailed(QAbstractSocket::SocketError socketError);
